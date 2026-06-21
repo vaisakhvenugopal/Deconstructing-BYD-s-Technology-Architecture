@@ -1,0 +1,1201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BYD: Decoding the Software-Defined Vehicle Playbook</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root {
+  --bg: #0a0c10;
+  --bg2: #111418;
+  --bg3: #161b22;
+  --border: rgba(255,255,255,0.08);
+  --border2: rgba(255,255,255,0.15);
+  --text: #e6edf3;
+  --text2: #8b949e;
+  --text3: #6e7681;
+  --accent: #00d4aa;
+  --accent2: #0ea5e9;
+  --accent3: #f59e0b;
+  --accent4: #a78bfa;
+  --red: #f85149;
+  --green: #3fb950;
+  --font: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --mono: 'JetBrains Mono', 'Fira Code', monospace;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 16px;
+  line-height: 1.7;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* NAVIGATION */
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(10,12,16,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 2rem;
+  display: flex; align-items: center; gap: 2rem; height: 56px;
+}
+.nav-logo { font-weight: 700; font-size: 14px; letter-spacing: 0.08em; color: var(--accent); text-transform: uppercase; }
+.nav-links { display: flex; gap: 1.5rem; list-style: none; margin-left: auto; }
+.nav-links a { font-size: 13px; color: var(--text2); transition: color 0.2s; }
+.nav-links a:hover { color: var(--text); text-decoration: none; }
+.nav-badge { background: var(--accent); color: #000; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px; margin-left: 8px; }
+
+/* HERO */
+.hero {
+  min-height: 100vh;
+  display: flex; flex-direction: column; justify-content: center;
+  padding: 8rem 2rem 4rem;
+  max-width: 1200px; margin: 0 auto;
+  position: relative;
+}
+.hero-eyebrow {
+  font-size: 12px; font-weight: 600; letter-spacing: 0.15em;
+  color: var(--accent); text-transform: uppercase; margin-bottom: 1.5rem;
+}
+.hero-title {
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  font-weight: 800; line-height: 1.1;
+  letter-spacing: -0.03em;
+  margin-bottom: 1.5rem;
+}
+.hero-title span { color: var(--accent); }
+.hero-subtitle {
+  font-size: 1.25rem; color: var(--text2); max-width: 680px;
+  line-height: 1.65; margin-bottom: 2.5rem;
+}
+.hero-meta {
+  display: flex; gap: 2rem; flex-wrap: wrap;
+  font-size: 13px; color: var(--text3);
+  border-top: 1px solid var(--border);
+  padding-top: 1.5rem;
+}
+.hero-meta strong { color: var(--text); }
+
+/* STAT STRIP */
+.stat-strip {
+  background: var(--bg2);
+  border-top: 1px solid var(--border); border-bottom: 1px solid var(--border);
+  padding: 2rem;
+}
+.stat-strip-inner {
+  max-width: 1200px; margin: 0 auto;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 2rem;
+}
+.stat-item { text-align: center; }
+.stat-num { font-size: 2rem; font-weight: 800; color: var(--accent); letter-spacing: -0.02em; }
+.stat-label { font-size: 12px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-top: 0.25rem; }
+
+/* CONTENT */
+.content { max-width: 1200px; margin: 0 auto; padding: 4rem 2rem; }
+
+/* SECTION */
+.section { margin-bottom: 5rem; }
+.section-eyebrow {
+  font-size: 11px; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 0.75rem;
+}
+.section-title {
+  font-size: clamp(1.75rem, 3vw, 2.5rem); font-weight: 700;
+  letter-spacing: -0.02em; margin-bottom: 1rem; line-height: 1.2;
+}
+.section-intro { font-size: 1.05rem; color: var(--text2); max-width: 760px; margin-bottom: 2.5rem; line-height: 1.75; }
+h3 { font-size: 1.25rem; font-weight: 600; margin: 2rem 0 0.75rem; }
+h4 { font-size: 1rem; font-weight: 600; color: var(--accent2); margin: 1.5rem 0 0.5rem; text-transform: uppercase; letter-spacing: 0.05em; font-size: 0.85rem; }
+p { color: var(--text2); margin-bottom: 1rem; }
+p strong { color: var(--text); }
+
+/* CALLOUT */
+.callout {
+  background: linear-gradient(135deg, rgba(0,212,170,0.08), rgba(14,165,233,0.05));
+  border: 1px solid rgba(0,212,170,0.25);
+  border-radius: 12px; padding: 1.5rem 2rem; margin: 2rem 0;
+}
+.callout-label { font-size: 11px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem; }
+.callout p { color: var(--text); margin: 0; font-size: 1rem; }
+
+/* ARCHITECTURE DIAGRAM CONTAINERS */
+.diagram-wrap {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 16px; padding: 1.5rem;
+  margin: 2.5rem 0; overflow-x: auto;
+}
+.diagram-label {
+  font-size: 12px; color: var(--text3); text-align: center; margin-top: 1rem;
+  font-style: italic; letter-spacing: 0.02em;
+}
+
+/* TABLES */
+.table-wrap { overflow-x: auto; margin: 2rem 0; border-radius: 12px; border: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+thead { background: var(--bg3); }
+thead th { padding: 0.875rem 1rem; text-align: left; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text3); border-bottom: 1px solid var(--border); }
+tbody tr { border-bottom: 1px solid var(--border); transition: background 0.15s; }
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: rgba(255,255,255,0.02); }
+tbody td { padding: 0.875rem 1rem; color: var(--text2); vertical-align: top; }
+tbody td:first-child { color: var(--text); font-weight: 500; }
+.badge {
+  display: inline-block; padding: 2px 8px; border-radius: 20px;
+  font-size: 11px; font-weight: 600;
+}
+.badge-green { background: rgba(63,185,80,0.15); color: var(--green); }
+.badge-amber { background: rgba(245,158,11,0.15); color: var(--accent3); }
+.badge-blue { background: rgba(14,165,233,0.15); color: var(--accent2); }
+.badge-red { background: rgba(248,81,73,0.15); color: var(--red); }
+.badge-purple { background: rgba(167,139,250,0.15); color: var(--accent4); }
+
+/* CARDS */
+.card-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 1.5rem; margin: 2rem 0; }
+.card {
+  background: var(--bg2); border: 1px solid var(--border);
+  border-radius: 12px; padding: 1.5rem;
+  transition: border-color 0.2s;
+}
+.card:hover { border-color: var(--border2); }
+.card-icon { font-size: 1.5rem; margin-bottom: 0.75rem; }
+.card-title { font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text); }
+.card-body { font-size: 0.9rem; color: var(--text2); line-height: 1.65; }
+
+/* IMAGE PLACEHOLDER */
+.img-placeholder {
+  background: var(--bg3);
+  border: 2px dashed var(--border2);
+  border-radius: 12px; padding: 2rem;
+  text-align: center; margin: 2rem 0;
+  color: var(--text3); font-size: 13px;
+}
+.img-placeholder .img-icon { font-size: 2rem; margin-bottom: 0.5rem; }
+.img-placeholder .img-label { font-weight: 600; color: var(--text2); margin-bottom: 0.25rem; }
+
+/* CHART CONTAINER */
+.chart-container { position: relative; height: 320px; margin: 1.5rem 0; }
+.chart-container-tall { position: relative; height: 420px; margin: 1.5rem 0; }
+
+/* TIMELINE */
+.timeline { position: relative; padding-left: 2rem; margin: 2rem 0; }
+.timeline::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: linear-gradient(to bottom, var(--accent), var(--accent2), var(--accent4)); border-radius: 2px; }
+.timeline-item { position: relative; margin-bottom: 2rem; }
+.timeline-dot { position: absolute; left: -2.4rem; top: 0.3rem; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); border: 2px solid var(--bg); }
+.timeline-year { font-size: 11px; font-weight: 700; color: var(--accent); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.25rem; }
+.timeline-heading { font-size: 1rem; font-weight: 600; color: var(--text); margin-bottom: 0.25rem; }
+.timeline-body { font-size: 0.9rem; color: var(--text2); }
+
+/* MERMAID */
+.mermaid-wrap { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; margin: 2rem 0; overflow-x: auto; }
+
+/* CHIP COMPARISON */
+.chip-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin: 2rem 0; }
+.chip-card {
+  background: var(--bg3); border: 1px solid var(--border);
+  border-radius: 10px; padding: 1.25rem; text-align: center;
+}
+.chip-name { font-size: 0.85rem; font-weight: 700; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 0.5rem; }
+.chip-tops { font-size: 1.75rem; font-weight: 800; color: var(--accent); }
+.chip-unit { font-size: 0.75rem; color: var(--text3); }
+.chip-sub { font-size: 0.8rem; color: var(--text2); margin-top: 0.5rem; }
+
+/* STRATEGY PILLARS */
+.pillars { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin: 2rem 0; }
+.pillar { background: var(--bg2); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; position: relative; overflow: hidden; }
+.pillar::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; }
+.pillar-cost::before { background: var(--accent); }
+.pillar-velocity::before { background: var(--accent2); }
+.pillar-data::before { background: var(--accent4); }
+.pillar-num { font-size: 3rem; font-weight: 900; opacity: 0.08; position: absolute; top: 0.5rem; right: 1rem; line-height: 1; }
+.pillar-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.5rem; }
+.pillar-cost .pillar-label { color: var(--accent); }
+.pillar-velocity .pillar-label { color: var(--accent2); }
+.pillar-data .pillar-label { color: var(--accent4); }
+.pillar-title { font-size: 1.1rem; font-weight: 700; color: var(--text); margin-bottom: 0.75rem; }
+.pillar-body { font-size: 0.875rem; color: var(--text2); line-height: 1.65; }
+
+/* SVG DIAGRAMS */
+svg text { font-family: var(--font); }
+
+/* RESPONSIVE */
+@media (max-width: 768px) {
+  .pillars { grid-template-columns: 1fr; }
+  nav { display: none; }
+  .hero { padding: 6rem 1.5rem 3rem; }
+  .content { padding: 2rem 1.5rem; }
+}
+
+/* PRINT / EXPORT QUALITY */
+.page-break { page-break-before: always; }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <span class="nav-logo">SDV Deep-Dive</span>
+  <ul class="nav-links">
+    <li><a href="#ee-arch">E/E Architecture</a></li>
+    <li><a href="#software">Software Stack</a></li>
+    <li><a href="#adas-ai">ADAS & AI</a></li>
+    <li><a href="#ota">OTA & Connectivity</a></li>
+    <li><a href="#market">Market Strategy</a></li>
+    <li><a href="#benchmarks">Benchmarks</a></li>
+  </ul>
+  <span class="nav-badge">2025 Edition</span>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <p class="hero-eyebrow">Technical Architecture Deep-Dive</p>
+  <h1 class="hero-title">
+    BYD: The <span>Silicon-to-Software</span><br>
+    Machine Reshaping Mobility
+  </h1>
+  <p class="hero-subtitle">
+    A definitive technical analysis of BYD's Xuanji E/E architecture, software-defined vehicle stack, AI silicon strategy, and the vertical integration playbook delivering 4.27M vehicles at margins that defy conventional automotive logic.
+  </p>
+  <div class="hero-meta">
+    <div><strong>Audience</strong> · Principal Architects, CTO, C-Suite</div>
+    <div><strong>Focus</strong> · SDV / AI-DV Architecture</div>
+    <div><strong>Data through</strong> · Q1 2025</div>
+    <div><strong>Scope</strong> · BYD vs Tesla vs Xiaomi Benchmark</div>
+  </div>
+</section>
+
+<!-- STAT STRIP -->
+<div class="stat-strip">
+  <div class="stat-strip-inner">
+    <div class="stat-item"><div class="stat-num">4.27M</div><div class="stat-label">Vehicles delivered 2024</div></div>
+    <div class="stat-item"><div class="stat-num">2.5×</div><div class="stat-label">Tesla's volume</div></div>
+    <div class="stat-item"><div class="stat-num">120K+</div><div class="stat-label">R&D engineers</div></div>
+    <div class="stat-item"><div class="stat-num">150M km</div><div class="stat-label">ADAS training data/day</div></div>
+    <div class="stat-item"><div class="stat-num">~200</div><div class="stat-label">OTA updates/year</div></div>
+    <div class="stat-item"><div class="stat-num">75%</div><div class="stat-label">Parts self-manufactured</div></div>
+    <div class="stat-item"><div class="stat-num">¥100B</div><div class="stat-label">AI & autonomy R&D commitment</div></div>
+  </div>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+
+<!-- EXECUTIVE SUMMARY -->
+<section class="section">
+  <p class="section-eyebrow">Executive Summary</p>
+  <h2 class="section-title">The Architecture That Built the World's Largest EV Maker</h2>
+  <p class="section-intro">BYD's ascent from battery manufacturer to the world's top NEV producer by volume is not a marketing story — it is an engineering story. This report dissects the three-generation E/E architecture evolution, the Xuanji AI platform, DiPilot tiered ADAS, and the FinDreams vertical integration engine that together form one of the most formidable competitive moats in mobility today.</p>
+
+  <div class="callout">
+    <div class="callout-label">Key Finding</div>
+    <p>BYD has achieved something uniquely difficult: it operates <strong>simultaneously at the cost frontier and the technology frontier</strong>. Its Xuanji A3 chip (4nm, 700+ TOPS) costs roughly one-third of an equivalent NVIDIA Thor solution, while its God's Eye ADAS is now standard on vehicles priced below $10,000 — a combination no traditional OEM or EV startup has replicated.</p>
+  </div>
+</section>
+
+<!-- E/E ARCHITECTURE -->
+<section class="section" id="ee-arch">
+  <p class="section-eyebrow">Chapter 01 · Hardware</p>
+  <h2 class="section-title">E/E Architecture: Three Generations of Transformation</h2>
+  <p class="section-intro">BYD's electrical/electronic architecture has undergone a radical restructuring — from a conventional distributed-ECU topology to the centralized, zonal Xuanji 4.0 framework. Each generation represents a deliberate compression of hardware and a commensurate expansion of software authority.</p>
+
+  <h3>Architectural Evolution Timeline</h3>
+
+  <div class="timeline">
+    <div class="timeline-item">
+      <div class="timeline-dot" style="background:#6e7681"></div>
+      <div class="timeline-year">Pre-2020 · Generation 1</div>
+      <div class="timeline-heading">Distributed ECU Era</div>
+      <div class="timeline-body">40+ discrete ECUs connected via CAN/LIN buses. Function-specific controllers operate in silos. High reliance on Tier-1 suppliers. No OTA capability. Architecture mirrors legacy ICE OEMs.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-dot" style="background:var(--accent2)"></div>
+      <div class="timeline-year">2021–2023 · Generation 2</div>
+      <div class="timeline-heading">e-Platform 3.0 — Domain Centralization</div>
+      <div class="timeline-body">Four primary domain controllers (Intelligent Power, Vehicle Control, Cockpit, Driving). The landmark "8-in-1" and "12-in-1" powertrain integrations. Introduction of BYD OS as the decoupling layer. First full-vehicle OTA capability. 50% response efficiency improvement claimed.</div>
+    </div>
+    <div class="timeline-item">
+      <div class="timeline-dot" style="background:var(--accent)"></div>
+      <div class="timeline-year">2024–Present · Generation 3</div>
+      <div class="timeline-heading">Xuanji Architecture — Central Compute + Zonal Control</div>
+      <div class="timeline-body">The "One Brain, Two Terminals, Three Networks, Four Chains" framework. Central computing platform running Xuanji A3 (4nm, 700+ TOPS single chip). Dual Gigabit Ethernet ring networks. Zonal gateways replace local domain controllers. Full DM and EV platform upgrade in February 2025 (Xuanji 2.0).</div>
+    </div>
+  </div>
+
+  <!-- ARCHITECTURE DIAGRAM -->
+  <div class="diagram-wrap">
+    <svg width="100%" viewBox="0 0 1100 620" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="#00d4aa" stroke-width="1.5" stroke-linecap="round"/>
+        </marker>
+        <marker id="arr2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="#8b949e" stroke-width="1.5" stroke-linecap="round"/>
+        </marker>
+      </defs>
+
+      <!-- Title -->
+      <text x="550" y="30" text-anchor="middle" fill="#e6edf3" font-size="15" font-weight="700" font-family="Inter,sans-serif">Xuanji 4.0 Architecture — "One Brain, Two Terminals, Three Networks, Four Chains"</text>
+
+      <!-- CLOUD LAYER -->
+      <rect x="20" y="50" width="1060" height="80" rx="10" fill="rgba(14,165,233,0.06)" stroke="rgba(14,165,233,0.3)" stroke-width="1"/>
+      <text x="40" y="72" fill="#0ea5e9" font-size="10" font-weight="700" font-family="Inter,sans-serif" letter-spacing="0.1em">CLOUD / TWO TERMINALS</text>
+      <rect x="80" y="82" width="160" height="36" rx="6" fill="rgba(14,165,233,0.12)" stroke="rgba(14,165,233,0.4)" stroke-width="0.8"/>
+      <text x="160" y="104" text-anchor="middle" fill="#e6edf3" font-size="12" font-weight="600" font-family="Inter,sans-serif">Xuanji Cloud AI</text>
+      <rect x="280" y="82" width="180" height="36" rx="6" fill="rgba(14,165,233,0.12)" stroke="rgba(14,165,233,0.4)" stroke-width="0.8"/>
+      <text x="370" y="104" text-anchor="middle" fill="#e6edf3" font-size="12" font-weight="600" font-family="Inter,sans-serif">DeepSeek R1 Training</text>
+      <rect x="500" y="82" width="160" height="36" rx="6" fill="rgba(14,165,233,0.12)" stroke="rgba(14,165,233,0.4)" stroke-width="0.8"/>
+      <text x="580" y="104" text-anchor="middle" fill="#e6edf3" font-size="12" font-weight="600" font-family="Inter,sans-serif">OTA Management</text>
+      <rect x="700" y="82" width="160" height="36" rx="6" fill="rgba(14,165,233,0.12)" stroke="rgba(14,165,233,0.4)" stroke-width="0.8"/>
+      <text x="780" y="104" text-anchor="middle" fill="#e6edf3" font-size="12" font-weight="600" font-family="Inter,sans-serif">Fleet Data Pipeline</text>
+      <text x="910" y="95" fill="#0ea5e9" font-size="11" font-family="Inter,sans-serif">5G · Satellite · V2X</text>
+
+      <!-- NETWORK LINES CLOUD TO CENTRAL -->
+      <line x1="550" y1="130" x2="550" y2="170" stroke="rgba(0,212,170,0.5)" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#arr)"/>
+
+      <!-- CENTRAL BRAIN -->
+      <rect x="200" y="170" width="700" height="110" rx="12" fill="rgba(0,212,170,0.06)" stroke="#00d4aa" stroke-width="1.5"/>
+      <text x="220" y="193" fill="#00d4aa" font-size="10" font-weight="700" font-family="Inter,sans-serif" letter-spacing="0.1em">ONE BRAIN — CENTRAL COMPUTING PLATFORM</text>
+
+      <!-- Chips inside central brain -->
+      <rect x="240" y="205" width="170" height="60" rx="8" fill="rgba(0,212,170,0.1)" stroke="rgba(0,212,170,0.5)" stroke-width="1"/>
+      <text x="325" y="228" text-anchor="middle" fill="#e6edf3" font-size="12" font-weight="700" font-family="Inter,sans-serif">Xuanji A3 (4nm)</text>
+      <text x="325" y="246" text-anchor="middle" fill="#00d4aa" font-size="11" font-family="Inter,sans-serif">700+ TOPS · ASIL-D</text>
+      <text x="325" y="260" text-anchor="middle" fill="#8b949e" font-size="10" font-family="Inter,sans-serif">16-core CPU · 3-core NPU</text>
+
+      <rect x="440" y="205" width="160" height="60" rx="8" fill="rgba(14,165,233,0.1)" stroke="rgba(14,165,233,0.4)" stroke-width="1"/>
+      <text x="520" y="228" text-anchor="middle" fill="#e6edf3" font-size="12" font-weight="700" font-family="Inter,sans-serif">NVIDIA Orin X</text>
+      <text x="520" y="246" text-anchor="middle" fill="#0ea5e9" font-size="11" font-family="Inter,sans-serif">254 TOPS · ASIL-D</text>
+      <text x="520" y="260" text-anchor="middle" fill="#8b949e" font-size="10" font-family="Inter,sans-serif">DiPilot 300/600</text>
+
+      <rect x="630" y="205" width="180" height="60" rx="8" fill="rgba(167,139,250,0.1)" stroke="rgba(167,139,250,0.4)" stroke-width="1"/>
+      <text x="720" y="228" text-anchor="middle" fill="#e6edf3" font-size="12" font-weight="700" font-family="Inter,sans-serif">Qualcomm / QNX</text>
+      <text x="720" y="246" text-anchor="middle" fill="#a78bfa" font-size="11" font-family="Inter,sans-serif">Cockpit · Hypervisor</text>
+      <text x="720" y="260" text-anchor="middle" fill="#8b949e" font-size="10" font-family="Inter,sans-serif">Android + QNX Isolated</text>
+
+      <!-- NETWORKS LAYER -->
+      <rect x="20" y="305" width="1060" height="50" rx="8" fill="rgba(245,158,11,0.04)" stroke="rgba(245,158,11,0.2)" stroke-width="0.8"/>
+      <text x="40" y="326" fill="#f59e0b" font-size="10" font-weight="700" font-family="Inter,sans-serif" letter-spacing="0.1em">THREE NETWORKS</text>
+      <text x="300" y="326" fill="#8b949e" font-size="12" font-family="Inter,sans-serif">Dual 10G Ethernet Ring</text>
+      <text x="530" y="326" fill="#8b949e" font-size="12" font-family="Inter,sans-serif">CAN-FD (Safety-Critical)</text>
+      <text x="760" y="326" fill="#8b949e" font-size="12" font-family="Inter,sans-serif">5G + Satellite Uplink</text>
+      <text x="40" y="345" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">IoV · 5G · Satellite</text>
+
+      <!-- ZONAL GATEWAYS -->
+      <text x="550" y="395" text-anchor="middle" fill="#8b949e" font-size="10" font-weight="700" font-family="Inter,sans-serif" letter-spacing="0.08em">FOUR CHAINS — ZONAL GATEWAYS</text>
+
+      <!-- Front Zone -->
+      <rect x="20" y="410" width="220" height="80" rx="8" fill="rgba(255,255,255,0.03)" stroke="var(--border)" stroke-width="0.8"/>
+      <text x="130" y="434" text-anchor="middle" fill="#e6edf3" font-size="12" font-weight="600" font-family="Inter,sans-serif">Front Zone</text>
+      <text x="130" y="452" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">Steering · Braking · ADAS Sensors</text>
+      <text x="130" y="467" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">Cameras · Radar · Ultrasonic</text>
+      <text x="130" y="482" text-anchor="middle" fill="#00d4aa" font-size="10" font-family="Inter,sans-serif">ASIL-D MCUs</text>
+
+      <!-- Rear Zone -->
+      <rect x="265" y="410" width="220" height="80" rx="8" fill="rgba(255,255,255,0.03)" stroke="var(--border)" stroke-width="0.8"/>
+      <text x="375" y="434" text-anchor="middle" fill="#e6edf3" font-size="12" font-weight="600" font-family="Inter,sans-serif">Rear Zone</text>
+      <text x="375" y="452" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">Powertrain · BMS · Charging</text>
+      <text x="375" y="467" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">12-in-1 Electric Drive</text>
+      <text x="375" y="482" text-anchor="middle" fill="#00d4aa" font-size="10" font-family="Inter,sans-serif">SiC / IGBT BYD Semiconductor</text>
+
+      <!-- Body Zone -->
+      <rect x="510" y="410" width="220" height="80" rx="8" fill="rgba(255,255,255,0.03)" stroke="var(--border)" stroke-width="0.8"/>
+      <text x="620" y="434" text-anchor="middle" fill="#e6edf3" font-size="12" font-weight="600" font-family="Inter,sans-serif">Body / Comfort Zone</text>
+      <text x="620" y="452" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">Lighting · HVAC · Windows</text>
+      <text x="620" y="467" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">vECU Migration 2026–28</text>
+      <text x="620" y="482" text-anchor="middle" fill="#a78bfa" font-size="10" font-family="Inter,sans-serif">AUTOSAR Classic → Adaptive</text>
+
+      <!-- Chassis Zone -->
+      <rect x="755" y="410" width="220" height="80" rx="8" fill="rgba(255,255,255,0.03)" stroke="var(--border)" stroke-width="0.8"/>
+      <text x="865" y="434" text-anchor="middle" fill="#e6edf3" font-size="12" font-weight="600" font-family="Inter,sans-serif">Chassis / DiSus Zone</text>
+      <text x="865" y="452" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">Air Suspension · Dampers</text>
+      <text x="865" y="467" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">Torque Vectoring (e4)</text>
+      <text x="865" y="482" text-anchor="middle" fill="#f59e0b" font-size="10" font-family="Inter,sans-serif">ms-level response</text>
+
+      <!-- Connect Central to Zones -->
+      <line x1="130" y1="280" x2="130" y2="410" stroke="rgba(0,212,170,0.4)" stroke-width="1.5" marker-end="url(#arr)"/>
+      <line x1="375" y1="280" x2="375" y2="410" stroke="rgba(0,212,170,0.4)" stroke-width="1.5" marker-end="url(#arr)"/>
+      <line x1="620" y1="280" x2="620" y2="410" stroke="rgba(0,212,170,0.4)" stroke-width="1.5" marker-end="url(#arr)"/>
+      <line x1="865" y1="280" x2="865" y2="410" stroke="rgba(0,212,170,0.4)" stroke-width="1.5" marker-end="url(#arr)"/>
+
+      <!-- SENSOR LAYER -->
+      <text x="550" y="525" text-anchor="middle" fill="#6e7681" font-size="10" font-weight="700" font-family="Inter,sans-serif" letter-spacing="0.08em">SENSOR & ACTUATOR LAYER (DiPilot 100/300/600)</text>
+      <rect x="20" y="535" width="195" height="30" rx="6" fill="rgba(255,255,255,0.02)" stroke="var(--border)" stroke-width="0.5"/>
+      <text x="117" y="554" text-anchor="middle" fill="#6e7681" font-size="11" font-family="Inter,sans-serif">12C + 5R + 12U (DiPilot 100)</text>
+      <rect x="235" y="535" width="195" height="30" rx="6" fill="rgba(255,255,255,0.02)" stroke="var(--border)" stroke-width="0.5"/>
+      <text x="332" y="554" text-anchor="middle" fill="#6e7681" font-size="11" font-family="Inter,sans-serif">+ 1 LiDAR (DiPilot 300)</text>
+      <rect x="450" y="535" width="195" height="30" rx="6" fill="rgba(255,255,255,0.02)" stroke="var(--border)" stroke-width="0.5"/>
+      <text x="547" y="554" text-anchor="middle" fill="#6e7681" font-size="11" font-family="Inter,sans-serif">+ 3 LiDAR (DiPilot 600)</text>
+      <rect x="665" y="535" width="195" height="30" rx="6" fill="rgba(255,255,255,0.02)" stroke="var(--border)" stroke-width="0.5"/>
+      <text x="762" y="554" text-anchor="middle" fill="#6e7681" font-size="11" font-family="Inter,sans-serif">Blade Battery · SiC Inverter</text>
+      <rect x="880" y="535" width="195" height="30" rx="6" fill="rgba(255,255,255,0.02)" stroke="var(--border)" stroke-width="0.5"/>
+      <text x="977" y="554" text-anchor="middle" fill="#6e7681" font-size="11" font-family="Inter,sans-serif">800V Architecture</text>
+
+      <!-- Legend -->
+      <rect x="20" y="590" width="12" height="12" rx="2" fill="rgba(0,212,170,0.4)"/>
+      <text x="38" y="601" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">Ethernet / High-speed data</text>
+      <rect x="200" y="590" width="12" height="12" rx="2" fill="rgba(14,165,233,0.4)"/>
+      <text x="218" y="601" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">Cloud connectivity</text>
+      <rect x="360" y="590" width="12" height="12" rx="2" fill="rgba(167,139,250,0.4)"/>
+      <text x="378" y="601" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">OS / Virtualization layer</text>
+    </svg>
+    <div class="diagram-label">Fig. 1 — Xuanji 4.0 Full-Stack E/E Architecture: Cloud-to-Actuator view (BYD 2024–2025)</div>
+  </div>
+
+  <!-- IMAGE PLACEHOLDER 1 -->
+  <div class="img-placeholder">
+    <div class="img-icon">🖼️</div>
+    <div class="img-label">INSERT IMAGE: Xuanji A3 Chip Video Still</div>
+    <div>Place your Xuanji A3 chip image/video screenshot here. Recommended: full-bleed or 16:9 ratio. Caption: "BYD Xuanji A3 — 4nm process node, 700+ TOPS single chip, ASIL-D certified, tri-chip configuration exceeds 2100 TOPS"</div>
+  </div>
+
+  <h3>Interconnect Topology: From CAN to 10G Ethernet</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Network</th><th>Protocol</th><th>Bandwidth</th><th>Domain</th><th>Purpose</th></tr></thead>
+      <tbody>
+        <tr><td>Primary Backbone</td><td>10G Ethernet Ring (Dual)</td><td>10 Gbps</td><td>ADAS ↔ Central Brain</td><td>Camera feeds, LiDAR point clouds, sensor fusion</td></tr>
+        <tr><td>Cockpit Bus</td><td>Gigabit Ethernet</td><td>1 Gbps</td><td>HMI ↔ Central</td><td>Display streams, audio, connectivity services</td></tr>
+        <tr><td>Safety Network</td><td>CAN-FD</td><td>8 Mbps</td><td>All safety ECUs</td><td>Brake-by-wire, steering, ASIL-critical signals</td></tr>
+        <tr><td>Body/Comfort</td><td>CAN / LIN</td><td>1 Mbps / 20kbps</td><td>Body zone</td><td>HVAC, lighting, windows, seats</td></tr>
+        <tr><td>Connectivity</td><td>5G / Satellite</td><td>Up to 1 Gbps DL</td><td>TCU</td><td>OTA, V2X, cloud data pipeline</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>FinDreams Vertical Integration: The Supply Chain Fortress</h3>
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-icon">🔋</div>
+      <div class="card-title">FinDreams Battery</div>
+      <div class="card-body">World's #2 EV battery manufacturer. Proprietary Blade Battery (LFP, cell-to-pack). 100% in-house supply. ~15–20% cost advantage vs CATL equivalent.</div>
+    </div>
+    <div class="card">
+      <div class="card-icon">⚡</div>
+      <div class="card-title">BYD Semiconductor</div>
+      <div class="card-body">IGBT 4.0/5.0, SiC power devices, MCUs, sensors. 6-inch fab (ex-TSMC Fab 1 equipment). ~85% in-house. Xuanji A3 ADAS chip (4nm) under development.</div>
+    </div>
+    <div class="card">
+      <div class="card-icon">🔧</div>
+      <div class="card-title">FinDreams Technology</div>
+      <div class="card-body">ADAS modules, cockpit units, body control, thermal management, wiring harnesses. ~90% in-house. Supplies externally, confirming Tier-1 status.</div>
+    </div>
+    <div class="card">
+      <div class="card-icon">⚙️</div>
+      <div class="card-title">FinDreams Powertrain</div>
+      <div class="card-body">Motors, EHS, 8-in-1 and 12-in-1 integration. ~95% in-house. Enables 30-hour vehicle assembly vs industry 40–50 hours.</div>
+    </div>
+  </div>
+
+  <div class="chart-container">
+    <canvas id="integrationChart" role="img" aria-label="Vertical integration comparison across BYD, Tesla, Xiaomi, and traditional OEMs. BYD leads at approximately 75% in-house.">BYD ~75%, Tesla ~45%, Xiaomi ~25%, Traditional OEMs ~35%</canvas>
+  </div>
+</section>
+
+<!-- SOFTWARE STACK -->
+<section class="section" id="software">
+  <p class="section-eyebrow">Chapter 02 · Software</p>
+  <h2 class="section-title">Software Architecture: The Three-OS Hybrid Strategy</h2>
+  <p class="section-intro">BYD's software architecture is neither the pure proprietary monolith of Tesla nor a simple Android-based skin. It is a deliberate three-layer hybrid — BYD OS for hardware abstraction, Android for the cockpit experience layer, and QNX for safety-critical isolation — all bound by a hypervisor that enables mixed-criticality on shared silicon.</p>
+
+  <!-- OS ARCHITECTURE DIAGRAM -->
+  <div class="diagram-wrap">
+    <svg width="100%" viewBox="0 0 1060 500" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="a1" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="#00d4aa" stroke-width="1.5"/>
+        </marker>
+      </defs>
+
+      <text x="530" y="28" text-anchor="middle" fill="#e6edf3" font-size="14" font-weight="700" font-family="Inter,sans-serif">BYD Software Stack — OS, Middleware & Safety Architecture</text>
+
+      <!-- Layer labels on left -->
+      <text x="15" y="90" fill="#6e7681" font-size="9" font-weight="700" font-family="Inter,sans-serif" transform="rotate(-90,15,90)">APPLICATION</text>
+      <text x="15" y="200" fill="#6e7681" font-size="9" font-weight="700" font-family="Inter,sans-serif" transform="rotate(-90,15,200)">RUNTIME / OS</text>
+      <text x="15" y="330" fill="#6e7681" font-size="9" font-weight="700" font-family="Inter,sans-serif" transform="rotate(-90,15,330)">MIDDLEWARE</text>
+      <text x="15" y="440" fill="#6e7681" font-size="9" font-weight="700" font-family="Inter,sans-serif" transform="rotate(-90,15,440)">HARDWARE</text>
+
+      <!-- APP LAYER -->
+      <rect x="40" y="45" width="300" height="55" rx="8" fill="rgba(167,139,250,0.1)" stroke="rgba(167,139,250,0.4)" stroke-width="0.8"/>
+      <text x="190" y="66" text-anchor="middle" fill="#a78bfa" font-size="11" font-weight="700" font-family="Inter,sans-serif">COCKPIT APPS</text>
+      <text x="190" y="84" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">DiLink 5.0 · Navigation · Media · Google Services</text>
+
+      <rect x="360" y="45" width="300" height="55" rx="8" fill="rgba(0,212,170,0.08)" stroke="rgba(0,212,170,0.35)" stroke-width="0.8"/>
+      <text x="510" y="66" text-anchor="middle" fill="#00d4aa" font-size="11" font-weight="700" font-family="Inter,sans-serif">ADAS / DRIVING APPS</text>
+      <text x="510" y="84" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">God's Eye · DiPilot · Perception · Planning</text>
+
+      <rect x="680" y="45" width="340" height="55" rx="8" fill="rgba(245,158,11,0.08)" stroke="rgba(245,158,11,0.3)" stroke-width="0.8"/>
+      <text x="850" y="66" text-anchor="middle" fill="#f59e0b" font-size="11" font-weight="700" font-family="Inter,sans-serif">VEHICLE CONTROL APPS</text>
+      <text x="850" y="84" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">BMS · Powertrain · Chassis Safety Functions</text>
+
+      <!-- OS LAYER -->
+      <rect x="40" y="120" width="300" height="65" rx="8" fill="rgba(167,139,250,0.15)" stroke="rgba(167,139,250,0.5)" stroke-width="1"/>
+      <text x="190" y="142" text-anchor="middle" fill="#a78bfa" font-size="12" font-weight="700" font-family="Inter,sans-serif">Android (AAOS)</text>
+      <text x="190" y="158" text-anchor="middle" fill="#8b949e" font-size="10" font-family="Inter,sans-serif">Qualcomm Snapdragon · DiLink 4.0/5.0</text>
+      <text x="190" y="174" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">No functional safety responsibility</text>
+
+      <rect x="360" y="120" width="300" height="65" rx="8" fill="rgba(0,212,170,0.12)" stroke="rgba(0,212,170,0.45)" stroke-width="1"/>
+      <text x="510" y="142" text-anchor="middle" fill="#00d4aa" font-size="12" font-weight="700" font-family="Inter,sans-serif">Linux / RTOS</text>
+      <text x="510" y="158" text-anchor="middle" fill="#8b949e" font-size="10" font-family="Inter,sans-serif">BYD OS Platform Layer · RT extensions</text>
+      <text x="510" y="174" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">ADAS compute, sensor fusion pipeline</text>
+
+      <rect x="680" y="120" width="340" height="65" rx="8" fill="rgba(248,81,73,0.1)" stroke="rgba(248,81,73,0.4)" stroke-width="1"/>
+      <text x="850" y="142" text-anchor="middle" fill="#f85149" font-size="12" font-weight="700" font-family="Inter,sans-serif">QNX OS for Safety</text>
+      <text x="850" y="158" text-anchor="middle" fill="#8b949e" font-size="10" font-family="Inter,sans-serif">Microkernel · ISO 26262 ASIL-D</text>
+      <text x="850" y="174" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">Deterministic · Memory-partitioned</text>
+
+      <!-- HYPERVISOR BAR -->
+      <rect x="40" y="205" width="980" height="36" rx="6" fill="rgba(14,165,233,0.12)" stroke="rgba(14,165,233,0.5)" stroke-width="1"/>
+      <text x="530" y="228" text-anchor="middle" fill="#0ea5e9" font-size="12" font-weight="700" font-family="Inter,sans-serif">QNX TYPE-1 HYPERVISOR — CPU/MMU/I/O Virtualization · Hardware-enforced isolation between VMs</text>
+
+      <!-- MIDDLEWARE LAYER -->
+      <rect x="40" y="261" width="300" height="70" rx="8" fill="rgba(255,255,255,0.03)" stroke="var(--border)" stroke-width="0.8"/>
+      <text x="190" y="281" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="600" font-family="Inter,sans-serif">SOA Middleware</text>
+      <text x="190" y="297" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">SOME/IP over Ethernet</text>
+      <text x="190" y="313" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">DDS · Service registry</text>
+      <text x="190" y="325" text-anchor="middle" fill="#a78bfa" font-size="10" font-family="Inter,sans-serif">In-house + Adaptive AUTOSAR principles</text>
+
+      <rect x="360" y="261" width="300" height="70" rx="8" fill="rgba(255,255,255,0.03)" stroke="var(--border)" stroke-width="0.8"/>
+      <text x="510" y="281" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="600" font-family="Inter,sans-serif">AUTOSAR (CP + AP)</text>
+      <text x="510" y="297" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">Classic: Edge MCUs / powertrain</text>
+      <text x="510" y="313" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">Adaptive: High-perf SoCs (Orin, A3)</text>
+      <text x="510" y="325" text-anchor="middle" fill="#00d4aa" font-size="10" font-family="Inter,sans-serif">SOAFEE consortium member</text>
+
+      <rect x="680" y="261" width="340" height="70" rx="8" fill="rgba(255,255,255,0.03)" stroke="var(--border)" stroke-width="0.8"/>
+      <text x="850" y="281" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="600" font-family="Inter,sans-serif">Safety Framework</text>
+      <text x="850" y="297" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">ISO 26262 ASIL-B/D</text>
+      <text x="850" y="313" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">Elektrobit RTOS · HSE root-of-trust</text>
+      <text x="850" y="325" text-anchor="middle" fill="#f85149" font-size="10" font-family="Inter,sans-serif">Formal methods + fault injection testing</text>
+
+      <!-- BYD OS SPANNING BAR -->
+      <rect x="40" y="351" width="980" height="36" rx="6" fill="rgba(0,212,170,0.08)" stroke="rgba(0,212,170,0.3)" stroke-width="0.8"/>
+      <text x="530" y="374" text-anchor="middle" fill="#00d4aa" font-size="12" font-weight="700" font-family="Inter,sans-serif">BYD OS — Hardware-Software Decoupling Layer · 4-Domain Integration · Full-Vehicle OTA · Linux RT Kernel</text>
+
+      <!-- HARDWARE LAYER -->
+      <rect x="40" y="407" width="230" height="50" rx="8" fill="rgba(255,255,255,0.03)" stroke="var(--border)" stroke-width="0.6"/>
+      <text x="155" y="427" text-anchor="middle" fill="#6e7681" font-size="11" font-family="Inter,sans-serif">Xuanji A3 · Qualcomm SoC</text>
+      <text x="155" y="443" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">Cockpit compute</text>
+
+      <rect x="290" y="407" width="230" height="50" rx="8" fill="rgba(255,255,255,0.03)" stroke="var(--border)" stroke-width="0.6"/>
+      <text x="405" y="427" text-anchor="middle" fill="#6e7681" font-size="11" font-family="Inter,sans-serif">NVIDIA Orin X / Horizon J5/J6</text>
+      <text x="405" y="443" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">ADAS compute</text>
+
+      <rect x="540" y="407" width="230" height="50" rx="8" fill="rgba(255,255,255,0.03)" stroke="var(--border)" stroke-width="0.6"/>
+      <text x="655" y="427" text-anchor="middle" fill="#6e7681" font-size="11" font-family="Inter,sans-serif">Safety MCUs (ASIL-D)</text>
+      <text x="655" y="443" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">Braking · Steering · BMS</text>
+
+      <rect x="790" y="407" width="230" height="50" rx="8" fill="rgba(255,255,255,0.03)" stroke="var(--border)" stroke-width="0.6"/>
+      <text x="905" y="427" text-anchor="middle" fill="#6e7681" font-size="11" font-family="Inter,sans-serif">BYD Semiconductor SiC/IGBT</text>
+      <text x="905" y="443" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">Power electronics</text>
+
+      <!-- vECU label -->
+      <text x="530" y="490" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">vECU Migration Roadmap: 2026 body/comfort → 2028 full zonal virtualization</text>
+    </svg>
+    <div class="diagram-label">Fig. 2 — BYD Three-OS Software Architecture with QNX Hypervisor isolation (2024)</div>
+  </div>
+
+  <h3>Central Compute vs. Edge Controller Split</h3>
+  <p>A critical architectural question for any SDV: what percentage of software runs on central compute vs. safety-grade edge controllers? BYD's current split and projected trajectory:</p>
+  <div class="chart-container">
+    <canvas id="computeSplitChart" role="img" aria-label="Software running on central compute vs edge controllers, 2021 to 2028 projection. Central compute grows from 18% to 82%.">Central compute share: 2021 18%, 2023 35%, 2025 55%, 2026 65%, 2028 82%</canvas>
+  </div>
+
+  <div class="callout">
+    <div class="callout-label">Architectural Strategy</div>
+    <p>BYD's vECU roadmap runs from 2026 to 2028 — migrating body/comfort controller functions first to virtual ECUs on zonal gateways, then progressively to the central brain. Edge MCUs will <strong>not</strong> be fully replaced; deterministic safety-critical functions (braking, steering) remain on dedicated ASIL-D silicon indefinitely.</p>
+  </div>
+</section>
+
+<!-- ADAS & AI -->
+<section class="section" id="adas-ai">
+  <p class="section-eyebrow">Chapter 03 · Intelligence</p>
+  <h2 class="section-title">ADAS & AI: God's Eye, Xuanji, and the Data Flywheel</h2>
+  <p class="section-intro">BYD's intelligent driving strategy is a three-tier silicon pyramid, a massive in-house algorithm team, and an AI flywheel driven by 150 million km of daily ADAS training data — feeding back into the Xuanji AI model via DeepSeek R1 integration.</p>
+
+  <!-- IMAGE PLACEHOLDER 2 -->
+  <div class="img-placeholder">
+    <div class="img-icon">🖼️</div>
+    <div class="img-label">INSERT IMAGE: BYD Partner Ecosystem Map</div>
+    <div>Place your BYD partner ecosystem image here. This should show NVIDIA, Horizon Robotics, Momenta, Huawei, Black Sesame, DeepSeek, Hesai, RoboSense and other key partners. Recommended: landscape format with BYD at center and partner logos arranged by category (Silicon, AI/Software, Sensor, Cloud).</div>
+  </div>
+
+  <h3>DiPilot / God's Eye Tiered ADAS Architecture</h3>
+
+  <!-- CHIP COMPARISON CARDS -->
+  <div class="chip-grid">
+    <div class="chip-card">
+      <div class="chip-name">God's Eye C · DiPilot 100</div>
+      <div class="chip-tops">~100</div><div class="chip-unit">TOPS</div>
+      <div class="chip-sub" style="color:#00d4aa; font-weight:600;">Horizon J5 / NVIDIA Orin N</div>
+      <div class="chip-sub">12C + 5R + 12U · No LiDAR</div>
+      <div class="chip-sub">Highway NOA · Seagull ($9k) to Dynasty</div>
+    </div>
+    <div class="chip-card">
+      <div class="chip-name">God's Eye B · DiPilot 300</div>
+      <div class="chip-tops">254</div><div class="chip-unit">TOPS</div>
+      <div class="chip-sub" style="color:#0ea5e9; font-weight:600;">NVIDIA Orin X (single)</div>
+      <div class="chip-sub">12C + 5R + 12U + 1 LiDAR</div>
+      <div class="chip-sub">City + Highway NOA · Denza / Ocean premium</div>
+    </div>
+    <div class="chip-card">
+      <div class="chip-name">God's Eye A · DiPilot 600</div>
+      <div class="chip-tops">508+</div><div class="chip-unit">TOPS</div>
+      <div class="chip-sub" style="color:#f59e0b; font-weight:600;">Dual NVIDIA Orin X</div>
+      <div class="chip-sub">12C + 5R + 12U + 3 LiDAR</div>
+      <div class="chip-sub">Full urban L3 · Yangwang U8/U9</div>
+    </div>
+    <div class="chip-card">
+      <div class="chip-name">Xuanji A3 · Future Flagship</div>
+      <div class="chip-tops">700+</div><div class="chip-unit">TOPS (single)</div>
+      <div class="chip-sub" style="color:#a78bfa; font-weight:600;">BYD In-House (4nm)</div>
+      <div class="chip-sub">16-core CPU · 273 GB/s DDR BW</div>
+      <div class="chip-sub">Tri-chip: 2100+ TOPS · ASIL-D · ~1/3 cost of Thor</div>
+    </div>
+  </div>
+
+  <!-- AI ARCHITECTURE DIAGRAM -->
+  <div class="diagram-wrap">
+    <svg width="100%" viewBox="0 0 1060 460" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="a2" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="#00d4aa" stroke-width="1.5"/>
+        </marker>
+        <marker id="a3" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="#f59e0b" stroke-width="1.5"/>
+        </marker>
+      </defs>
+      <text x="530" y="28" text-anchor="middle" fill="#e6edf3" font-size="14" font-weight="700" font-family="Inter,sans-serif">Xuanji AI Architecture — Dual-Cycle Intelligence + DeepSeek R1 Integration</text>
+
+      <!-- CLOUD LEFT: Training -->
+      <rect x="20" y="50" width="300" height="150" rx="10" fill="rgba(14,165,233,0.07)" stroke="rgba(14,165,233,0.3)" stroke-width="1"/>
+      <text x="170" y="74" text-anchor="middle" fill="#0ea5e9" font-size="11" font-weight="700" font-family="Inter,sans-serif">CLOUD CYCLE (Continuous Learning)</text>
+      <rect x="40" y="85" width="260" height="35" rx="6" fill="rgba(14,165,233,0.12)" stroke="rgba(14,165,233,0.3)" stroke-width="0.8"/>
+      <text x="170" y="107" text-anchor="middle" fill="#e6edf3" font-size="11" font-family="Inter,sans-serif">Xuanji AI Foundation Model</text>
+      <rect x="40" y="130" width="120" height="35" rx="6" fill="rgba(14,165,233,0.1)" stroke="rgba(14,165,233,0.25)" stroke-width="0.8"/>
+      <text x="100" y="152" text-anchor="middle" fill="#8b949e" font-size="10" font-family="Inter,sans-serif">DeepSeek R1 LLM</text>
+      <rect x="180" y="130" width="120" height="35" rx="6" fill="rgba(14,165,233,0.1)" stroke="rgba(14,165,233,0.25)" stroke-width="0.8"/>
+      <text x="240" y="152" text-anchor="middle" fill="#8b949e" font-size="10" font-family="Inter,sans-serif">World Model Sim</text>
+
+      <!-- CLOUD RIGHT: Fleet Data -->
+      <rect x="740" y="50" width="300" height="150" rx="10" fill="rgba(245,158,11,0.07)" stroke="rgba(245,158,11,0.3)" stroke-width="1"/>
+      <text x="890" y="74" text-anchor="middle" fill="#f59e0b" font-size="11" font-weight="700" font-family="Inter,sans-serif">DATA FLYWHEEL</text>
+      <text x="890" y="100" text-anchor="middle" fill="#e6edf3" font-size="24" font-weight="800" font-family="Inter,sans-serif">150M km</text>
+      <text x="890" y="120" text-anchor="middle" fill="#f59e0b" font-size="11" font-family="Inter,sans-serif">training data / day</text>
+      <text x="890" y="145" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">4.27M vehicles · 300+ scenarios</text>
+      <text x="890" y="162" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">Edge → Regional GW → Cloud AI pipeline</text>
+      <text x="890" y="179" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">72M km/day (2024) → 150M (2025)</text>
+
+      <!-- CENTRAL AI BRAIN -->
+      <rect x="340" y="50" width="380" height="235" rx="12" fill="rgba(0,212,170,0.06)" stroke="#00d4aa" stroke-width="1.5"/>
+      <text x="530" y="74" text-anchor="middle" fill="#00d4aa" font-size="12" font-weight="700" font-family="Inter,sans-serif">XUANJI VEHICLE AI — DUAL-CYCLE MODEL</text>
+      <text x="530" y="93" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">Industry's first dual-cycle multi-modal AI model · 300+ scenarios</text>
+
+      <rect x="360" y="106" width="160" height="60" rx="8" fill="rgba(0,212,170,0.1)" stroke="rgba(0,212,170,0.4)" stroke-width="0.8"/>
+      <text x="440" y="127" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="600" font-family="Inter,sans-serif">Perception Layer</text>
+      <text x="440" y="143" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">BEV fusion · Multi-modal</text>
+      <text x="440" y="157" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">Camera + LiDAR + Radar</text>
+
+      <rect x="540" y="106" width="160" height="60" rx="8" fill="rgba(0,212,170,0.1)" stroke="rgba(0,212,170,0.4)" stroke-width="0.8"/>
+      <text x="620" y="127" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="600" font-family="Inter,sans-serif">Planning Layer</text>
+      <text x="620" y="143" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">E2E neural pipeline</text>
+      <text x="620" y="157" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">Rule-based fallback</text>
+
+      <rect x="360" y="184" width="160" height="60" rx="8" fill="rgba(167,139,250,0.1)" stroke="rgba(167,139,250,0.35)" stroke-width="0.8"/>
+      <text x="440" y="205" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="600" font-family="Inter,sans-serif">Cockpit AI</text>
+      <text x="440" y="221" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">Voice · Intent detection</text>
+      <text x="440" y="235" text-anchor="middle" fill="#a78bfa" font-size="10" font-family="Inter,sans-serif">DeepSeek R1 in-vehicle</text>
+
+      <rect x="540" y="184" width="160" height="60" rx="8" fill="rgba(245,158,11,0.08)" stroke="rgba(245,158,11,0.3)" stroke-width="0.8"/>
+      <text x="620" y="205" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="600" font-family="Inter,sans-serif">Vehicle Cycle (ms)</text>
+      <text x="620" y="221" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">Real-time execution</text>
+      <text x="620" y="235" text-anchor="middle" fill="#f59e0b" font-size="10" font-family="Inter,sans-serif">~8µs decision latency</text>
+
+      <!-- ARROWS: Cloud to Central -->
+      <line x1="320" y1="130" x2="340" y2="150" stroke="rgba(14,165,233,0.6)" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#a2)"/>
+      <line x1="740" y1="130" x2="720" y2="150" stroke="rgba(245,158,11,0.6)" stroke-width="1.5" stroke-dasharray="4 3" marker-end="url(#a3)"/>
+
+      <!-- PARTNER LAYER -->
+      <text x="530" y="315" text-anchor="middle" fill="#6e7681" font-size="10" font-weight="700" font-family="Inter,sans-serif" letter-spacing="0.08em">AI & SILICON PARTNER ECOSYSTEM</text>
+
+      <rect x="40" y="330" width="140" height="50" rx="6" fill="rgba(255,255,255,0.03)" stroke="var(--border)" stroke-width="0.8"/>
+      <text x="110" y="352" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="600" font-family="Inter,sans-serif">NVIDIA</text>
+      <text x="110" y="368" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">Orin X · DRIVE Hyperion</text>
+
+      <rect x="200" y="330" width="140" height="50" rx="6" fill="rgba(255,255,255,0.03)" stroke="var(--border)" stroke-width="0.8"/>
+      <text x="270" y="352" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="600" font-family="Inter,sans-serif">Horizon Robotics</text>
+      <text x="270" y="368" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">Journey 5/6 · SuperDrive</text>
+
+      <rect x="360" y="330" width="140" height="50" rx="6" fill="rgba(255,255,255,0.03)" stroke="var(--border)" stroke-width="0.8"/>
+      <text x="430" y="352" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="600" font-family="Inter,sans-serif">DeepSeek</text>
+      <text x="430" y="368" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">R1 LLM · Cloud training</text>
+
+      <rect x="520" y="330" width="140" height="50" rx="6" fill="rgba(255,255,255,0.03)" stroke="var(--border)" stroke-width="0.8"/>
+      <text x="590" y="352" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="600" font-family="Inter,sans-serif">Momenta</text>
+      <text x="590" y="368" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">DiPai JV · Urban NOA</text>
+
+      <rect x="680" y="330" width="140" height="50" rx="6" fill="rgba(255,255,255,0.03)" stroke="var(--border)" stroke-width="0.8"/>
+      <text x="750" y="352" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="600" font-family="Inter,sans-serif">Huawei (Fangchengbao)</text>
+      <text x="750" y="368" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">Qiankun ADS 3.0</text>
+
+      <rect x="840" y="330" width="200" height="50" rx="6" fill="rgba(255,255,255,0.03)" stroke="var(--border)" stroke-width="0.8"/>
+      <text x="940" y="352" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="600" font-family="Inter,sans-serif">Hesai · RoboSense</text>
+      <text x="940" y="368" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">LiDAR sensors (DiPilot 300/600)</text>
+
+      <!-- TEAM SIZE NOTE -->
+      <text x="530" y="420" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">5,000+ engineers dedicated to intelligent driving · 3,000 software engineers · 1,000 core algorithm team · RMB 1B/month payroll</text>
+      <text x="530" y="440" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">Teams: Tianxuan + Tianlang merged (late 2024) → unified God's Eye · Led by Yang Dongsheng (SVP)</text>
+    </svg>
+    <div class="diagram-label">Fig. 3 — BYD Xuanji AI Architecture: Dual-cycle model, partner ecosystem, and data flywheel</div>
+  </div>
+
+  <h3>ADAS Partner Ecosystem by Silicon Tier</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Partner</th><th>Product</th><th>Specs</th><th>BYD Application</th><th>Status</th></tr></thead>
+      <tbody>
+        <tr><td>NVIDIA</td><td>DRIVE Orin X</td><td>254 TOPS · ASIL-D · 205 GB/s</td><td>DiPilot 300/600 (Denza, Dynasty, Yangwang)</td><td><span class="badge badge-green">Production 2023+</span></td></tr>
+        <tr><td>Horizon Robotics</td><td>Journey 5 / J6M</td><td>128 TOPS / 137 kDMIPS</td><td>DiPilot 100 (Ocean, Seagull, mainstream)</td><td><span class="badge badge-green">Production 2023+</span></td></tr>
+        <tr><td>Horizon Robotics</td><td>SuperDrive (J6)</td><td>Urban NOA full-scenario</td><td>God's Eye C God's Eye upgrade path</td><td><span class="badge badge-amber">Mass prod Sep 2025</span></td></tr>
+        <tr><td>Black Sesame</td><td>Huashan SoC</td><td>High-performance ADAS</td><td>Selected BYD programs</td><td><span class="badge badge-blue">Active</span></td></tr>
+        <tr><td>Momenta (DiPai JV)</td><td>Urban NOA stack</td><td>End-to-end neural</td><td>TianShen A/B tiers</td><td><span class="badge badge-blue">Active</span></td></tr>
+        <tr><td>Huawei</td><td>Qiankun ADS 3.0</td><td>192-channel LiDAR</td><td>Fangchengbao Bao 5 (optional)</td><td><span class="badge badge-blue">Available</span></td></tr>
+        <tr><td>BYD In-house</td><td>Xuanji A3 (4nm)</td><td>700+ TOPS · 2100 TOPS tri-chip</td><td>Future flagship / premium brands</td><td><span class="badge badge-purple">Under development</span></td></tr>
+        <tr><td>DeepSeek</td><td>R1 LLM</td><td>Real-time reasoning</td><td>Cockpit AI, driving intent, NLP</td><td><span class="badge badge-green">Integrated Feb 2025</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- OTA & CONNECTIVITY -->
+<section class="section" id="ota">
+  <p class="section-eyebrow">Chapter 04 · Connectivity</p>
+  <h2 class="section-title">OTA & Connectivity: 200 Updates/Year at Scale</h2>
+  <p class="section-intro">BYD's over-the-air update architecture is the mechanism by which software authority translates into customer-facing value. At ~200 OTA packages per year — 12× Tesla's China cadence — BYD has operationalized software iteration as a competitive weapon.</p>
+
+  <h3>OTA Architecture: Dual-Bank Flashing & Delta Compression</h3>
+  <div class="diagram-wrap">
+    <svg width="100%" viewBox="0 0 1060 380" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <marker id="a4" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="#00d4aa" stroke-width="1.5"/>
+        </marker>
+        <marker id="a5" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="#8b949e" stroke-width="1.5"/>
+        </marker>
+      </defs>
+      <text x="530" y="28" text-anchor="middle" fill="#e6edf3" font-size="14" font-weight="700" font-family="Inter,sans-serif">OTA Update Pipeline — Security, Dual-Bank Flash, Staged Rollout</text>
+
+      <!-- CLOUD -->
+      <rect x="20" y="50" width="180" height="80" rx="8" fill="rgba(14,165,233,0.1)" stroke="rgba(14,165,233,0.4)" stroke-width="1"/>
+      <text x="110" y="78" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="700" font-family="Inter,sans-serif">BYD OTA Cloud</text>
+      <text x="110" y="95" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">Alibaba Cloud + Huawei</text>
+      <text x="110" y="111" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">4.27M vehicle fleet</text>
+      <line x1="200" y1="90" x2="240" y2="90" stroke="rgba(0,212,170,0.6)" stroke-width="1.5" marker-end="url(#a4)"/>
+
+      <!-- SIGNING -->
+      <rect x="240" y="65" width="150" height="50" rx="6" fill="rgba(255,255,255,0.03)" stroke="var(--border)" stroke-width="0.8"/>
+      <text x="315" y="86" text-anchor="middle" fill="#e6edf3" font-size="10" font-weight="600" font-family="Inter,sans-serif">Cryptographic Signing</text>
+      <text x="315" y="101" text-anchor="middle" fill="#6e7681" font-size="9" font-family="Inter,sans-serif">BYD private key · Delta compression</text>
+      <text x="315" y="115" text-anchor="middle" fill="#6e7681" font-size="9" font-family="Inter,sans-serif">70–90% size reduction</text>
+      <line x1="390" y1="90" x2="430" y2="90" stroke="rgba(0,212,170,0.6)" stroke-width="1.5" marker-end="url(#a4)"/>
+
+      <!-- STAGED ROLLOUT -->
+      <rect x="430" y="55" width="180" height="70" rx="6" fill="rgba(245,158,11,0.08)" stroke="rgba(245,158,11,0.35)" stroke-width="0.8"/>
+      <text x="520" y="78" text-anchor="middle" fill="#f59e0b" font-size="11" font-weight="700" font-family="Inter,sans-serif">Staged Rollout</text>
+      <text x="520" y="94" text-anchor="middle" fill="#6e7681" font-size="9" font-family="Inter,sans-serif">Canary fleet → 1% → 10% → 100%</text>
+      <text x="520" y="108" text-anchor="middle" fill="#6e7681" font-size="9" font-family="Inter,sans-serif">Telemetry monitoring per batch</text>
+      <line x1="610" y1="90" x2="650" y2="90" stroke="rgba(0,212,170,0.6)" stroke-width="1.5" marker-end="url(#a4)"/>
+
+      <!-- VEHICLE TCU -->
+      <rect x="650" y="55" width="180" height="70" rx="8" fill="rgba(0,212,170,0.08)" stroke="rgba(0,212,170,0.35)" stroke-width="0.8"/>
+      <text x="740" y="78" text-anchor="middle" fill="#00d4aa" font-size="11" font-weight="700" font-family="Inter,sans-serif">Vehicle TCU</text>
+      <text x="740" y="94" text-anchor="middle" fill="#6e7681" font-size="9" font-family="Inter,sans-serif">5G download · Sig verify</text>
+      <text x="740" y="108" text-anchor="middle" fill="#6e7681" font-size="9" font-family="Inter,sans-serif">Precondition check (SOC, park state)</text>
+      <line x1="830" y1="90" x2="870" y2="90" stroke="rgba(0,212,170,0.6)" stroke-width="1.5" marker-end="url(#a4)"/>
+
+      <!-- DUAL BANK -->
+      <rect x="870" y="40" width="170" height="100" rx="8" fill="rgba(255,255,255,0.03)" stroke="var(--border)" stroke-width="0.8"/>
+      <text x="955" y="62" text-anchor="middle" fill="#e6edf3" font-size="11" font-weight="700" font-family="Inter,sans-serif">Dual-Bank Flash</text>
+      <rect x="885" y="70" width="130" height="22" rx="4" fill="rgba(0,212,170,0.15)" stroke="rgba(0,212,170,0.4)" stroke-width="0.8"/>
+      <text x="950" y="84" text-anchor="middle" fill="#00d4aa" font-size="10" font-weight="600" font-family="Inter,sans-serif">Bank A (Active — running)</text>
+      <rect x="885" y="100" width="130" height="22" rx="4" fill="rgba(245,158,11,0.1)" stroke="rgba(245,158,11,0.3)" stroke-width="0.8"/>
+      <text x="950" y="114" text-anchor="middle" fill="#f59e0b" font-size="10" font-weight="600" font-family="Inter,sans-serif">Bank B (Writing update)</text>
+
+      <!-- ROLLBACK -->
+      <text x="955" y="155" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">Verify OK → Switch bootloader</text>
+      <text x="955" y="169" text-anchor="middle" fill="#f85149" font-size="10" font-family="Inter,sans-serif">Fail → Auto rollback to A</text>
+
+      <!-- CADENCE TABLE -->
+      <text x="530" y="220" text-anchor="middle" fill="#e6edf3" font-size="12" font-weight="700" font-family="Inter,sans-serif">OTA Update Cadence by Domain</text>
+
+      <rect x="20" y="235" width="200" height="110" rx="8" fill="rgba(167,139,250,0.08)" stroke="rgba(167,139,250,0.3)" stroke-width="0.8"/>
+      <text x="120" y="258" text-anchor="middle" fill="#a78bfa" font-size="11" font-weight="700" font-family="Inter,sans-serif">Infotainment (SOTA)</text>
+      <text x="120" y="278" text-anchor="middle" fill="#e6edf3" font-size="18" font-weight="800" font-family="Inter,sans-serif">4–6 wks</text>
+      <text x="120" y="298" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">Android DiLink · Auto-install</text>
+      <text x="120" y="313" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">Transparent to user</text>
+      <text x="120" y="335" text-anchor="middle" fill="#a78bfa" font-size="9" font-family="Inter,sans-serif">~8–10 updates/year (major)</text>
+
+      <rect x="240" y="235" width="200" height="110" rx="8" fill="rgba(0,212,170,0.08)" stroke="rgba(0,212,170,0.3)" stroke-width="0.8"/>
+      <text x="340" y="258" text-anchor="middle" fill="#00d4aa" font-size="11" font-weight="700" font-family="Inter,sans-serif">ADAS / Perception (FOTA)</text>
+      <text x="340" y="278" text-anchor="middle" fill="#e6edf3" font-size="18" font-weight="800" font-family="Inter,sans-serif">Quarterly</text>
+      <text x="340" y="298" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">Signed · Dual-bank</text>
+      <text x="340" y="313" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">Emergency: as-needed</text>
+      <text x="340" y="335" text-anchor="middle" fill="#00d4aa" font-size="9" font-family="Inter,sans-serif">Algorithm + perception model updates</text>
+
+      <rect x="460" y="235" width="200" height="110" rx="8" fill="rgba(14,165,233,0.08)" stroke="rgba(14,165,233,0.3)" stroke-width="0.8"/>
+      <text x="560" y="258" text-anchor="middle" fill="#0ea5e9" font-size="11" font-weight="700" font-family="Inter,sans-serif">Powertrain / BMS (FOTA)</text>
+      <text x="560" y="278" text-anchor="middle" fill="#e6edf3" font-size="18" font-weight="800" font-family="Inter,sans-serif">Bi-annual</text>
+      <text x="560" y="298" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">Range / efficiency tuning</text>
+      <text x="560" y="313" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">BMS chemistry optimization</text>
+      <text x="560" y="335" text-anchor="middle" fill="#0ea5e9" font-size="9" font-family="Inter,sans-serif">+range OTA demonstrated (2.6L/100km)</text>
+
+      <rect x="680" y="235" width="200" height="110" rx="8" fill="rgba(248,81,73,0.07)" stroke="rgba(248,81,73,0.3)" stroke-width="0.8"/>
+      <text x="780" y="258" text-anchor="middle" fill="#f85149" font-size="11" font-weight="700" font-family="Inter,sans-serif">Safety-Critical (FOTA)</text>
+      <text x="780" y="278" text-anchor="middle" fill="#e6edf3" font-size="18" font-weight="800" font-family="Inter,sans-serif">Annual+</text>
+      <text x="780" y="298" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">Strict certification cycle</text>
+      <text x="780" y="313" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">ISO 26262 re-validation</text>
+      <text x="780" y="335" text-anchor="middle" fill="#f85149" font-size="9" font-family="Inter,sans-serif">Regulatory approval required</text>
+
+      <rect x="900" y="235" width="140" height="110" rx="8" fill="rgba(255,255,255,0.03)" stroke="var(--border)" stroke-width="0.8"/>
+      <text x="970" y="258" text-anchor="middle" fill="#8b949e" font-size="11" font-weight="700" font-family="Inter,sans-serif">TOTAL CADENCE</text>
+      <text x="970" y="285" text-anchor="middle" fill="#00d4aa" font-size="30" font-weight="900" font-family="Inter,sans-serif">~200</text>
+      <text x="970" y="305" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">packages/year</text>
+      <text x="970" y="325" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">vs ~16/yr Tesla CN</text>
+      <text x="970" y="343" text-anchor="middle" fill="#6e7681" font-size="10" font-family="Inter,sans-serif">vs ~3/yr Toyota</text>
+    </svg>
+    <div class="diagram-label">Fig. 4 — BYD OTA Pipeline Architecture: from cloud signing to dual-bank flash deployment</div>
+  </div>
+</section>
+
+<!-- MARKET STRATEGY -->
+<section class="section" id="market">
+  <p class="section-eyebrow">Chapter 05 · Market</p>
+  <h2 class="section-title">Vehicle Archetypes: Architecture Deployed Across the Portfolio</h2>
+  <p class="section-intro">BYD's multi-brand strategy is not a product portfolio decision alone — it is an architecture deployment decision. Each brand tier deploys a distinct E/E configuration calibrated to price point, use case, and competitive positioning.</p>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Brand / Series</th><th>Models</th><th>E/E Architecture</th><th>ADAS Tier</th><th>Silicon</th><th>Price Range</th><th>Volume</th></tr></thead>
+      <tbody>
+        <tr><td>Yangwang</td><td>U8, U9</td><td>Xuanji 2.0 + e4 Platform</td><td>DiPilot 600 (God's Eye A)</td><td>Dual Orin X + Xuanji A3</td><td>&gt;$100K</td><td><span class="badge badge-purple">Ultra-Premium</span></td></tr>
+        <tr><td>Fangchengbao</td><td>Bao 5</td><td>Xuanji + DMO</td><td>DiPilot 300 or Huawei ADS 3.0</td><td>Orin X / Huawei MDC</td><td>$40K–$80K</td><td><span class="badge badge-blue">Off-Road Premium</span></td></tr>
+        <tr><td>Denza</td><td>N7, N8, Z9</td><td>Xuanji + e3 Platform</td><td>DiPilot 300 (God's Eye B)</td><td>NVIDIA Orin X (single)</td><td>$30K–$60K</td><td><span class="badge badge-blue">Premium Family</span></td></tr>
+        <tr><td>Dynasty — High</td><td>Han, Tang</td><td>Xuanji / e-Platform 3.0</td><td>DiPilot 300/100</td><td>Orin X / Orin N</td><td>$20K–$40K</td><td><span class="badge badge-green">Mid-High Volume</span></td></tr>
+        <tr><td>Ocean — Mid</td><td>Seal, Sealion 6</td><td>e-Platform 3.0</td><td>DiPilot 100 (God's Eye C)</td><td>Orin N / Horizon J6M</td><td>$15K–$25K</td><td><span class="badge badge-green">Core Volume</span></td></tr>
+        <tr><td>Ocean — Entry</td><td>Seagull, Dolphin</td><td>e-Platform 3.0</td><td>DiPilot 100 (God's Eye C)</td><td>Horizon J6M</td><td>&lt;$15K ($9K min)</td><td><span class="badge badge-amber">Highest Volume</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="callout">
+    <div class="callout-label">February 2025 Milestone</div>
+    <p>BYD announced <strong>God's Eye ADAS as standard across 21 of 30 models</strong> spanning 4 brands — including the $9,000 Seagull. This makes BYD the first automaker globally to offer full highway NOA capability standard on a sub-$10,000 vehicle. Target: 40–50% of 2025 sales volume (approx. 2–2.5 million units) equipped with intelligent driving.</p>
+  </div>
+</section>
+
+<!-- BENCHMARKS -->
+<section class="section" id="benchmarks">
+  <p class="section-eyebrow">Chapter 06 · Comparative Analysis</p>
+  <h2 class="section-title">BYD vs Tesla vs Xiaomi: The SDV Litmus Test</h2>
+  <p class="section-intro">How truly software-defined is BYD? This section benchmarks BYD against Tesla — the SDV pioneer — and Xiaomi — the clean-sheet SDV challenger — across architecture maturity, software depth, silicon independence, and competitive economics.</p>
+
+  <div class="chart-container-tall">
+    <canvas id="sdvRadar" role="img" aria-label="Radar chart comparing BYD, Tesla, and Xiaomi across 6 SDV dimensions. BYD leads in vertical integration and OTA cadence, Tesla leads in software purity and central architecture.">BYD vs Tesla vs Xiaomi SDV comparison across vertical integration, OTA cadence, silicon independence, central compute, data scale, and software purity.</canvas>
+  </div>
+
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>SDV Dimension</th><th>BYD</th><th>Tesla</th><th>Xiaomi</th><th>Winner</th></tr></thead>
+      <tbody>
+        <tr><td>Central Compute Architecture</td><td><span class="badge badge-green">✓ Xuanji 2.0 (prod.)</span></td><td><span class="badge badge-green">✓ HW4 (pioneered)</span></td><td><span class="badge badge-green">✓ Surge OS + Central</span></td><td>Tesla (depth), BYD (scale)</td></tr>
+        <tr><td>Self-Developed OS</td><td><span class="badge badge-green">✓ BYD OS</span></td><td><span class="badge badge-green">✓ Tesla OS (Linux)</span></td><td><span class="badge badge-green">✓ HyperOS (Android)</span></td><td>Tesla (most unified)</td></tr>
+        <tr><td>Proprietary AI/ADAS Chip</td><td><span class="badge badge-amber">⚡ Xuanji A3 (dev)</span></td><td><span class="badge badge-green">✓ AI4/AI5 (deployed)</span></td><td><span class="badge badge-red">✗ Third-party SoCs</span></td><td>Tesla (deployed)</td></tr>
+        <tr><td>Full-Stack Algorithm</td><td><span class="badge badge-amber">~ Hybrid (self+Momenta)</span></td><td><span class="badge badge-green">✓ Fully in-house</span></td><td><span class="badge badge-amber">~ Partial</span></td><td>Tesla</td></tr>
+        <tr><td>OTA Frequency</td><td><span class="badge badge-green">✓ ~200/year</span></td><td><span class="badge badge-blue">~ ~16/year (CN)</span></td><td><span class="badge badge-blue">~ ~20–30/year</span></td><td>BYD (by 12×)</td></tr>
+        <tr><td>Vertical Integration</td><td><span class="badge badge-green">✓ ~75% in-house</span></td><td><span class="badge badge-amber">~ ~45% in-house</span></td><td><span class="badge badge-red">✗ ~25% in-house</span></td><td>BYD</td></tr>
+        <tr><td>Daily ADAS Training Data</td><td><span class="badge badge-green">✓ 150M km/day</span></td><td><span class="badge badge-green">✓ Comparable scale</span></td><td><span class="badge badge-red">✗ Significantly less</span></td><td>BYD / Tesla (tied)</td></tr>
+        <tr><td>ADAS at Sub-$15K Vehicles</td><td><span class="badge badge-green">✓ Standard (Seagull)</span></td><td><span class="badge badge-red">✗ FSD optional add-on</span></td><td><span class="badge badge-blue">~ Limited models</span></td><td>BYD</td></tr>
+        <tr><td>R&D Engineer Count</td><td><span class="badge badge-green">✓ 120,000+</span></td><td><span class="badge badge-blue">~ ~12,000</span></td><td><span class="badge badge-blue">~ ~3,400</span></td><td>BYD (10×)</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="chart-container">
+    <canvas id="otaCompare" role="img" aria-label="OTA update cadence comparison: BYD approximately 200 per year, Tesla approximately 16, Toyota approximately 8, Traditional OEMs approximately 3.">BYD ~200, Tesla ~16, Toyota ~8, Legacy OEM ~3 OTA updates per year</canvas>
+  </div>
+
+  <h3>SDV Maturity Assessment</h3>
+  <p>BYD's SDV maturity sits at what we characterize as the <strong>Pragmatic Scale Phase</strong>: it has delivered millions of software-defined vehicles in production, operates a data flywheel comparable to Tesla's, and is closing the silicon independence gap with the Xuanji A3 chip. Where it trails is in the depth of pure-software control — Tesla's unified OS and fully in-house FSD algorithm represent a more cohesive (if lower volume) software stack.</p>
+
+  <div class="callout">
+    <div class="callout-label">Definitive Assessment</div>
+    <p>BYD pursues a <strong>"Hardware defines cost, Software defines experience"</strong> model — vertical integration delivers the cost floor, while OTA velocity and AI partnerships deliver the experience ceiling. Tesla's <strong>"Software defines everything"</strong> philosophy runs deeper but serves 2.5× fewer customers. Against Xiaomi, BYD's supply chain depth and 75% self-sufficiency represent a moat Xiaomi cannot replicate without decades of capital investment.</p>
+  </div>
+</section>
+
+<!-- DIFFERENTIATION PLAYBOOK -->
+<section class="section">
+  <p class="section-eyebrow">Chapter 07 · Strategy</p>
+  <h2 class="section-title">The Triple-Moat Differentiation Playbook</h2>
+  <p class="section-intro">BYD's competitive architecture is not built on any single technology — it is built on three interlocking moats that create a self-reinforcing flywheel. Understanding this structure is essential for any organization attempting to compete with or partner with BYD globally.</p>
+
+  <div class="pillars">
+    <div class="pillar pillar-cost">
+      <div class="pillar-num">01</div>
+      <div class="pillar-label">Cost Moat</div>
+      <div class="pillar-title">Vertical Integration Chain</div>
+      <div class="pillar-body">
+        Lithium mine → Blade Battery → IGBT/SiC/Xuanji A3 → Vehicle. 75% parts self-manufactured eliminates supplier margins at every layer. Xuanji A3 costs ~1/3 of NVIDIA Thor. Result: <strong>Highway NOA standard on sub-$15K vehicles</strong>. Cost structure ~20–25% below traditional OEM baselines for core components.
+      </div>
+    </div>
+    <div class="pillar pillar-velocity">
+      <div class="pillar-num">02</div>
+      <div class="pillar-label">Velocity Moat</div>
+      <div class="pillar-title">Full-Stack Iteration Control</div>
+      <div class="pillar-body">
+        Closed-loop ecosystem (self-developed chip → OS → algorithm → data) means OTA updates do not require third-party supplier coordination. Result: <strong>~200 OTA packages/year</strong> — 12× Tesla's China cadence, 25× Toyota's. New model from concept to production: 12–18 months vs industry 36–48 months.
+      </div>
+    </div>
+    <div class="pillar pillar-data">
+      <div class="pillar-num">03</div>
+      <div class="pillar-label">Data Moat</div>
+      <div class="pillar-title">The 150M km/day Flywheel</div>
+      <div class="pillar-body">
+        4.27M vehicles on road generate 150M km of ADAS training data daily. Algorithm iteration efficiency claimed at 3× industry average. DeepSeek R1 integration accelerates cloud training. Result: <strong>data flywheel compounds continuously</strong> — latecomers face a widening gap, not a static one.
+      </div>
+    </div>
+  </div>
+
+  <div class="chart-container">
+    <canvas id="moatChart" role="img" aria-label="BYD competitive moat size comparison: Vertical integration advantage, OTA velocity advantage, fleet data scale, and R&D investment, benchmarked against industry average at 1.0.">BYD competitive advantages vs industry baseline.</canvas>
+  </div>
+</section>
+
+<!-- STRATEGIC IMPLICATIONS -->
+<section class="section">
+  <p class="section-eyebrow">Chapter 08 · Implications</p>
+  <h2 class="section-title">Strategic Implications for Architects & Executives</h2>
+  <p class="section-intro">What does BYD's architecture mean for you? Whether you are a principal architect evaluating SDV technology choices, a CTO benchmarking your own stack, or a C-suite executive assessing competitive exposure, the following frameworks apply.</p>
+
+  <div class="card-grid">
+    <div class="card">
+      <div class="card-title" style="color:var(--accent)">For Technical Architects</div>
+      <div class="card-body">
+        BYD's Xuanji architecture demonstrates that <strong>a heterogeneous multi-OS strategy with a Type-1 hypervisor is viable at scale</strong>. QNX + Android + Linux across a shared SoC, with AUTOSAR Classic at the edge and Adaptive AUTOSAR emerging in the center, is the pragmatic path — not a pure-Linux Tesla-style monolith. Plan your vECU migration in stages: body/comfort first (2026), then powertrain auxiliary (2028). Do not conflate OTA cadence with software quality — BYD's 200 packages/year works because of delta compression, staged rollouts, and dual-bank flash, not despite safety standards.
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="color:var(--accent2)">For CTOs & Technology Leaders</div>
+      <div class="card-body">
+        BYD's silicon strategy reveals the <strong>strategic value of chip design capability even without fab ownership</strong>. The Xuanji A3 (TSMC 4nm, fabless) delivers FSD-competitive TOPS at 1/3 the cost because hardware-software co-design removes the third-party SoC markup. If you are building an SDV platform, evaluate whether your compute dependency on NVIDIA or Qualcomm represents a strategic bottleneck. BYD's answer: yes, and it built its own chip. The 5,000-person ADAS engineering team is not a cost center — it is the mechanism by which 150M km/day of data translates into product differentiation.
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title" style="color:var(--accent3)">For C-Suite Executives</div>
+      <div class="card-body">
+        BYD is not competing on one dimension — it is competing on three simultaneously: <strong>cost (vertical integration), velocity (OTA cadence), and data scale (fleet flywheel)</strong>. Any organization entering a market where BYD competes must identify which moat it can meaningfully contest. Cost: nearly impossible without decades of supply chain investment. Velocity: achievable with a cloud-native software organization. Data: requires either massive fleet scale or synthetic data strategies. The most defensible strategy against BYD is deep regional specialization, differentiated software experience, or superior safety/regulatory positioning in markets where BYD's compliance footprint is less mature.
+      </div>
+    </div>
+  </div>
+
+  <h3>2025–2030 Architecture Roadmap</h3>
+  <div class="table-wrap">
+    <table>
+      <thead><tr><th>Horizon</th><th>E/E Architecture</th><th>Silicon</th><th>ADAS Capability</th><th>Software</th></tr></thead>
+      <tbody>
+        <tr><td><strong>Now (2025)</strong></td><td>Xuanji 2.0 (central + zonal)</td><td>Orin X + Horizon J6 + A3 (dev)</td><td>L2+ standard 21 models · Urban NOA mass prod</td><td>BYD OS + QNX Hypervisor · DeepSeek R1 integrated</td></tr>
+        <tr><td><strong>2026</strong></td><td>Full zonal transition · vECU body/comfort</td><td>Xuanji A3 in premium production · Orin + J6 mainstream</td><td>L2+/L3 city full coverage · Valet parking all models</td><td>Adaptive AUTOSAR expanded · SOAFEE deeper integration</td></tr>
+        <tr><td><strong>2028</strong></td><td>Central compute dominant (~80% software)</td><td>Xuanji A3 2nd gen · Possible Thor for ultra-premium</td><td>L3 regulatory approval (CN) · Highway L4 limited</td><td>Full SOA · vECU powertrain auxiliary migration</td></tr>
+        <tr><td><strong>2030</strong></td><td>Fully centralized HPC + minimal zonal</td><td>Proprietary 3nm ADAS SoC (speculative)</td><td>L4 robotaxi capability (fleet deployment)</td><td>AI-native OS · LLM-first vehicle experience</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+</div><!-- /content -->
+
+<!-- FOOTER -->
+<footer style="background:var(--bg2); border-top:1px solid var(--border); padding:3rem 2rem; text-align:center; color:var(--text3); font-size:13px;">
+  <p style="margin-bottom:0.5rem; font-weight:600; color:var(--text2);">BYD SDV Architecture Deep-Dive · Technical Research Report</p>
+  <p>Sources: BYD Dream Day 2024, BYD Intelligent Strategy Conference Feb 2025, NVIDIA DRIVE specifications, Horizon Robotics public disclosures, 36Kr, DeepSeek integration announcements, ISO 26262 documentation, SOAFEE consortium publications, BYD annual reports.</p>
+  <p style="margin-top:0.5rem;">For technical architects, CTOs, and C-suite executives · Data through Q1 2025 · Research compiled June 2025</p>
+</footer>
+
+<script>
+const chartDefaults = {
+  color: '#8b949e',
+  font: { family: "'Inter', -apple-system, sans-serif", size: 12 }
+};
+Chart.defaults.color = chartDefaults.color;
+Chart.defaults.font = chartDefaults.font;
+
+// 1. VERTICAL INTEGRATION CHART
+new Chart(document.getElementById('integrationChart'), {
+  type: 'bar',
+  data: {
+    labels: ['BYD', 'Tesla', 'Traditional OEMs', 'Xiaomi', 'Legacy OEM (avg)'],
+    datasets: [{
+      label: 'In-house component share (%)',
+      data: [75, 47, 35, 26, 32],
+      backgroundColor: ['rgba(0,212,170,0.7)', 'rgba(14,165,233,0.7)', 'rgba(139,148,158,0.5)', 'rgba(167,139,250,0.6)', 'rgba(139,148,158,0.4)'],
+      borderColor: ['#00d4aa', '#0ea5e9', '#8b949e', '#a78bfa', '#8b949e'],
+      borderWidth: 1,
+      borderRadius: 6
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      title: { display: true, text: 'Vertical Integration: In-House Component Sourcing (% of BOM)', color: '#e6edf3', font: { size: 13, weight: '600' } }
+    },
+    scales: {
+      y: { beginAtZero: true, max: 100, grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { callback: v => v + '%' } },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+// 2. COMPUTE SPLIT CHART
+new Chart(document.getElementById('computeSplitChart'), {
+  type: 'bar',
+  data: {
+    labels: ['2021', '2023', '2025', '2026E', '2028E'],
+    datasets: [
+      {
+        label: 'Central Compute',
+        data: [18, 35, 55, 65, 82],
+        backgroundColor: 'rgba(0,212,170,0.7)',
+        borderColor: '#00d4aa', borderWidth: 1, borderRadius: 4
+      },
+      {
+        label: 'Edge Controllers (Safety MCUs)',
+        data: [82, 65, 45, 35, 18],
+        backgroundColor: 'rgba(14,165,233,0.4)',
+        borderColor: '#0ea5e9', borderWidth: 1, borderRadius: 4
+      }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: true, position: 'bottom', labels: { color: '#8b949e', padding: 20, usePointStyle: true, pointStyle: 'rect' } },
+      title: { display: true, text: 'BYD Software Running on Central Compute vs Edge Controllers (%)', color: '#e6edf3', font: { size: 13, weight: '600' } }
+    },
+    scales: {
+      x: { stacked: true, grid: { display: false } },
+      y: { stacked: true, max: 100, grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { callback: v => v + '%' } }
+    }
+  }
+});
+
+// 3. SDV RADAR CHART
+new Chart(document.getElementById('sdvRadar'), {
+  type: 'radar',
+  data: {
+    labels: ['Vertical\nIntegration', 'OTA Cadence', 'Silicon\nIndependence', 'Central\nCompute Depth', 'Data Scale', 'Software Purity'],
+    datasets: [
+      {
+        label: 'BYD',
+        data: [9, 9.5, 6, 7, 8.5, 6.5],
+        borderColor: '#00d4aa', backgroundColor: 'rgba(0,212,170,0.12)',
+        borderWidth: 2, pointBackgroundColor: '#00d4aa', pointRadius: 4
+      },
+      {
+        label: 'Tesla',
+        data: [5, 6, 9, 9.5, 8.5, 9.5],
+        borderColor: '#f85149', backgroundColor: 'rgba(248,81,73,0.08)',
+        borderWidth: 2, pointBackgroundColor: '#f85149', pointRadius: 4
+      },
+      {
+        label: 'Xiaomi',
+        data: [3, 7, 3, 8, 4, 7],
+        borderColor: '#a78bfa', backgroundColor: 'rgba(167,139,250,0.08)',
+        borderWidth: 2, pointBackgroundColor: '#a78bfa', pointRadius: 4
+      }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: true, position: 'bottom', labels: { color: '#8b949e', usePointStyle: true, padding: 20 } },
+      title: { display: true, text: 'SDV Maturity: BYD vs Tesla vs Xiaomi (10-point scale)', color: '#e6edf3', font: { size: 13, weight: '600' } }
+    },
+    scales: {
+      r: {
+        grid: { color: 'rgba(255,255,255,0.08)' },
+        angleLines: { color: 'rgba(255,255,255,0.08)' },
+        pointLabels: { color: '#8b949e', font: { size: 11 } },
+        ticks: { display: false },
+        suggestedMin: 0, suggestedMax: 10
+      }
+    }
+  }
+});
+
+// 4. OTA CADENCE COMPARISON
+new Chart(document.getElementById('otaCompare'), {
+  type: 'bar',
+  data: {
+    labels: ['BYD', 'Xiaomi', 'Tesla (China)', 'Tesla (Global)', 'Toyota', 'Legacy OEM avg'],
+    datasets: [{
+      label: 'OTA Updates per Year',
+      data: [200, 28, 16, 12, 8, 3],
+      backgroundColor: ['rgba(0,212,170,0.75)', 'rgba(167,139,250,0.65)', 'rgba(248,81,73,0.65)', 'rgba(248,81,73,0.45)', 'rgba(139,148,158,0.5)', 'rgba(139,148,158,0.4)'],
+      borderColor: ['#00d4aa', '#a78bfa', '#f85149', '#f85149', '#8b949e', '#8b949e'],
+      borderWidth: 1, borderRadius: 6
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: false },
+      title: { display: true, text: 'OTA Update Cadence: Annual Packages (All Domains)', color: '#e6edf3', font: { size: 13, weight: '600' } }
+    },
+    scales: {
+      y: { grid: { color: 'rgba(255,255,255,0.06)' } },
+      x: { grid: { display: false } }
+    }
+  }
+});
+
+// 5. MOAT CHART
+new Chart(document.getElementById('moatChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Vertical\nIntegration Depth', 'OTA Velocity\n(updates/yr)', 'Fleet Data\nScale (M km/day)', 'R&D Headcount\n(× industry avg)', 'ADAS at\nSub-$15K'],
+    datasets: [
+      {
+        label: 'BYD',
+        data: [75, 200, 150, 10, 100],
+        backgroundColor: 'rgba(0,212,170,0.7)',
+        borderColor: '#00d4aa', borderWidth: 1, borderRadius: 4
+      },
+      {
+        label: 'Industry Average / Tesla ref',
+        data: [38, 14, 90, 1, 0],
+        backgroundColor: 'rgba(139,148,158,0.4)',
+        borderColor: '#8b949e', borderWidth: 1, borderRadius: 4
+      }
+    ]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: true, position: 'bottom', labels: { color: '#8b949e', usePointStyle: true, padding: 20 } },
+      title: { display: true, text: 'BYD Triple-Moat: Competitive Metrics vs Industry Reference', color: '#e6edf3', font: { size: 13, weight: '600' } }
+    },
+    scales: {
+      y: { grid: { color: 'rgba(255,255,255,0.06)' } },
+      x: { grid: { display: false }, ticks: { maxRotation: 0, font: { size: 11 } } }
+    }
+  }
+});
+</script>
+</body>
+</html>
